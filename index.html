@@ -4,7 +4,8 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Maître Hassan · Expert Fiscal IA — CGI Maroc 2024</title>
-  <meta name="description" content="Consultez le CGI Maroc 2024 avec une IA expert-comptable. IS, TVA, IR, cas pratiques, écritures PCM."/>
+  <meta name="description" content="Consultez le CGI Maroc 2024 avec une IA expert-comptable. IS, TVA, IR, cas pratiques, écritures comptables PCM."/>
+  <meta name="keywords" content="CGI maroc, fiscalité maroc, IS maroc, TVA maroc, IR maroc, expert comptable maroc"/>
   <style>*{margin:0;padding:0;box-sizing:border-box}body{background:#0d1a0d}#root{min-height:100vh}</style>
 </head>
 <body>
@@ -12,77 +13,8 @@
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script type="text/babel" data-type="module">
+  <script type="text/babel">
 const { useState, useRef, useEffect } = React;
-
-// ─── API KEY MANAGER ──────────────────────────────────────────────────────────
-function ApiKeyScreen({ onKey }) {
-  const [val, setVal] = useState("");
-  const [err, setErr] = useState("");
-  const [testing, setTesting] = useState(false);
-
-  const test = async () => {
-    if (!val.trim().startsWith("sk-ant-")) { setErr("La clé doit commencer par sk-ant-..."); return; }
-    setTesting(true); setErr("");
-    try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "x-api-key": val.trim(), "anthropic-version": "2023-06-01" },
-        body: JSON.stringify({ model: "claude-haiku-4-5-20251001", max_tokens: 10, messages: [{ role: "user", content: "test" }] }),
-      });
-      const data = await res.json();
-      if (data.error) { setErr("Clé invalide : " + data.error.message); setTesting(false); return; }
-      onKey(val.trim());
-    } catch(e) { setErr("Erreur réseau : " + e.message); setTesting(false); }
-  };
-
-  return (
-    <div style={{ minHeight:"100vh", background:"#0d1a0d", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"Georgia,serif", padding:20 }}>
-      <div style={{ background:"#0f1f0f", border:"1px solid #2a5a2a", borderRadius:16, padding:"32px 28px", maxWidth:480, width:"100%" }}>
-        <div style={{ textAlign:"center", marginBottom:24 }}>
-          <div style={{ fontSize:"2.5em", marginBottom:8 }}>⚖️</div>
-          <div style={{ color:"#c9a84c", fontWeight:"bold", fontSize:"1.2em", marginBottom:6 }}>Maître Hassan · Expert Fiscal IA</div>
-          <div style={{ color:"#4a6a4a", fontSize:"0.82em", lineHeight:1.6 }}>
-            Pour utiliser cet outil, entrez votre clé API Anthropic.<br/>
-            Elle est stockée uniquement dans votre navigateur.
-          </div>
-        </div>
-
-        <div style={{ background:"#0a150a", border:"1px solid #1a3a1a", borderRadius:10, padding:"14px 16px", marginBottom:16, fontSize:"0.8em" }}>
-          <div style={{ color:"#c9a84c", fontWeight:"bold", marginBottom:8 }}>Comment obtenir votre clé ?</div>
-          <div style={{ color:"#5a7a5a", lineHeight:1.8 }}>
-            1. Allez sur <span style={{ color:"#7ab8d4" }}>console.anthropic.com</span><br/>
-            2. Créez un compte (gratuit)<br/>
-            3. API Keys → <strong style={{ color:"#7ec880" }}>Create Key</strong><br/>
-            4. Copiez la clé ci-dessous
-          </div>
-        </div>
-
-        <div style={{ marginBottom:12 }}>
-          <div style={{ fontSize:"0.75em", color:"#4a6a4a", marginBottom:6, letterSpacing:"0.05em" }}>VOTRE CLÉ API ANTHROPIC</div>
-          <input
-            type="password"
-            value={val}
-            onChange={e => setVal(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && test()}
-            placeholder="sk-ant-api03-..."
-            style={{ width:"100%", background:"#1a2e1a", border:"1px solid #2a5a2a", borderRadius:8, padding:"10px 14px", color:"#e8dcc8", fontSize:"0.9em", fontFamily:"monospace", outline:"none", boxSizing:"border-box" }}
-          />
-        </div>
-
-        {err && <div style={{ background:"#2a0a0a", border:"1px solid #7a2a2a", borderRadius:8, padding:"8px 12px", color:"#e87a7a", fontSize:"0.8em", marginBottom:12 }}>⚠️ {err}</div>}
-
-        <button onClick={test} disabled={!val.trim() || testing} style={{ width:"100%", background: val.trim() && !testing ? "linear-gradient(135deg,#2d5a2d,#4a7a2a)" : "#1a2e1a", border:"none", borderRadius:10, padding:"12px", color: val.trim() && !testing ? "#c9a84c" : "#3a5a3a", fontSize:"0.95em", fontWeight:"bold", cursor: val.trim() && !testing ? "pointer" : "not-allowed", fontFamily:"Georgia,serif" }}>
-          {testing ? "⏳ Vérification..." : "✅ Accéder à Maître Hassan"}
-        </button>
-
-        <div style={{ textAlign:"center", marginTop:12, fontSize:"0.7em", color:"#2a4a2a" }}>
-          🔒 Clé stockée localement · Non partagée · Non sauvegardée sur serveur
-        </div>
-      </div>
-    </div>
-  );
-}
 
 
 // ─── PROMPTS ──────────────────────────────────────────────────────────────────
@@ -635,9 +567,9 @@ function App() {
       const history = [...messages, userMsg]
         .filter((m) => m.role === "user" || m.role === "assistant")
         .map((m) => ({ role: m.role, content: m.content || "" }));
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      const res = await fetch("/api/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "x-api-key": apiKey, "anthropic-version": "2023-06-01" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 2000, system: SYSTEM_CHAT, messages: history, tools: [{ type: "web_search_20250305", name: "web_search" }] }),
       });
       const data = await res.json();
@@ -659,9 +591,9 @@ function App() {
     setLoading(true);
     setLoadingMsg("📊 Analyse comptable & fiscale en cours…");
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      const res = await fetch("/api/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "x-api-key": apiKey, "anthropic-version": "2023-06-01" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 2000, system: SYSTEM_CAS, messages: [{ role: "user", content: q }] }),
       });
       const data = await res.json();
@@ -915,14 +847,9 @@ function App() {
   );
 }
 
-  function Root() {
-    const [apiKey, setApiKey] = useState(() => sessionStorage.getItem("mh_api_key") || "");
-    const handleKey = (k) => { sessionStorage.setItem("mh_api_key", k); setApiKey(k); };
-    if (!apiKey) return React.createElement(ApiKeyScreen, { onKey: handleKey });
-    return React.createElement(App, { apiKey });
-  }
-  const root = ReactDOM.createRoot(document.getElementById('root'));
-  root.render(React.createElement(Root));
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(React.createElement(App));
   </script>
 </body>
 </html>
