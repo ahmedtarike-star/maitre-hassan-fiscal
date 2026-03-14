@@ -7,28 +7,29 @@ export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: { message: "Method not allowed" } });
 
   const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return res.status(500).json({ error: { message: "Clé GEMINI_API_KEY manquante" } });
+  if (!apiKey) return res.status(500).json({ error: { message: "Clé GEMINI_API_KEY manquante sur Vercel" } });
 
   try {
     const { system, messages, max_tokens } = req.body;
 
-    const contents = (messages || [])
-      .filter(m => m.content && m.content.trim())
-      .map(m => ({
-        role: m.role === "assistant" ? "model" : "user",
-        parts: [{ text: m.content.trim() }]
-      }));
+    const filtered = (messages || []).filter(m => m.content && m.content.trim());
+    if (!filtered.length) return res.status(400).json({ error: { message: "Message vide" } });
 
-    if (!contents.length) return res.status(400).json({ error: { message: "Message vide" } });
+    // Prepend system prompt to first user message (Gemini 1.5 flash doesn't support system_instruction on this endpoint)
+    const contents = filtered.map((m, i) => ({
+      role: m.role === "assistant" ? "model" : "user",
+      parts: [{ text: i === 0 && system ? `${system}\n\n---\n\n${m.content.trim()}` : m.content.trim() }]
+    }));
 
     const body = {
-      ...(system && { system_instruction: { parts: [{ text: system }] } }),
       contents,
-      generationConfig: { maxOutputTokens: max_tokens || 2000, temperature: 0.7 }
+      generationConfig: {
+        maxOutputTokens: max_tokens || 2000,
+        temperature: 0.7,
+      }
     };
 
-    // v1 + gemini-1.5-flash-latest = free tier garanti
-    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
     const response = await fetch(url, {
       method: "POST",
@@ -46,6 +47,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ content: [{ type: "text", text }] });
 
   } catch (err) {
-    return res.status(500).json({ error: { message: `Erreur: ${err.message}` } });
+    return res.status(500).json({ error: { message: `Erreur serveur: ${err.message}` } });
   }
 }
